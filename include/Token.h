@@ -39,4 +39,10 @@ struct Token {
     std::string lexeme;
     int line;
     int column;
+
+    Token()
+        : type(TokenType::END_OF_FILE),
+          lexeme(""),
+          line(0),
+          column(0) {}
 };
