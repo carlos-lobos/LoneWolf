@@ -13,4 +13,4 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 make -j$(nproc)
 
 echo -e "\nEjecutando ./lonewolf ...\n"
-./lonewolf
+./lonewolf "$1"

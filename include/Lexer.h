@@ -20,4 +20,5 @@ private:
     void skipWhitespace();
     Token number();
     Token identifier();
+    int peek();
 };
