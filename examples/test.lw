@@ -1,6 +1,6 @@
-a == b
-c != d
-x <= 10
-y >= 20
-z < 5
-w > 3
+// comentario simple
+x = 10; /* comentario
+multilinea */
+y = x + 1; // otro comentario
+/* comentario 
+multilinea */

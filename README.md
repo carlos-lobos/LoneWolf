@@ -1,4 +1,4 @@
-# LoneWolf
+# LoneWolf 🐺
 New Modern Program Language with AI Full Integrated
 
 ### Clonate the repository
@@ -18,5 +18,5 @@ sudo apt install build-essential
 
 ### Build the project and run it
 ```bash
-./build.sh
+./build.sh [<file.lw>]
 ```

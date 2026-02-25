@@ -1,6 +1,13 @@
 #include <cctype>
 #include "Lexer.h"
 
+const std::unordered_map<std::string, TokenType> Lexer::keywords = {
+    {"if", TokenType::IF},
+    {"else", TokenType::ELSE},
+    {"while", TokenType::WHILE},
+    {"return", TokenType::RETURN}
+};
+
 Lexer::Lexer(std::istream& input)
     : input(input), currentChar(0), line(1), column(0)
 {
@@ -34,6 +41,14 @@ Token Lexer::identifier() {
         advance();
     }
 
+    auto it = keywords.find(lexeme);
+    if (it != keywords.end()) {
+        return Token(it->second, lexeme, startLine, startColumn);
+    }
+
+    return Token(TokenType::IDENTIFIER, lexeme, startLine, startColumn);
+
+    /* Alternativamente:
     Token t;
     t.type = TokenType::IDENTIFIER;
     t.lexeme = lexeme;
@@ -41,6 +56,7 @@ Token Lexer::identifier() {
     t.column = startColumn;
 
     return t;
+    */
 }
 
 Token Lexer::number() {
@@ -162,6 +178,28 @@ Token Lexer::getNextToken() {
                 return Token(TokenType::GREATER, lexeme, startLine, startColumn);
             }
         }
+
+        // "//" o "/"
+        if (currentChar == '/') {
+
+            if (peek() == '/') {
+                skipLineComment();
+                continue;
+            }
+
+            if (peek() == '*') {
+                skipBlockComment();
+                continue;
+            }
+
+            int startLine = line;
+            int startColumn = column;
+
+            char c = static_cast<char>(currentChar);
+            advance();
+
+            return Token(TokenType::SLASH, std::string(1, c), startLine, startColumn);
+        }
         //-- FIN :: Manejo de operadores compuestos (antes de los operadores simples) --//
 
         //-- Preparo las variables para usarlas en los tokens de 1 solo caracter (operadores simples) --//
@@ -186,9 +224,9 @@ Token Lexer::getNextToken() {
                 advance();
                 return Token{TokenType::STAR, std::string(1, c), startLine, startColumn};
 
-            case '/':
+            /*case '/':
                 advance();
-                return Token{TokenType::SLASH, std::string(1, c), startLine, startColumn};
+                return Token{TokenType::SLASH, std::string(1, c), startLine, startColumn};*/
 
             case ';':
                 advance();
@@ -227,4 +265,31 @@ Token Lexer::getNextToken() {
 
 int Lexer::peek() {
     return input.peek();
+}
+
+void Lexer::skipLineComment() {
+    // consumir "//"
+    advance();
+    advance();
+
+    while (currentChar != '\n' && currentChar != EOF) {
+        advance();
+    }
+}
+
+void Lexer::skipBlockComment() {
+    // consumir "/*"
+    advance();
+    advance();
+
+    while (currentChar != EOF) {
+
+        if (currentChar == '*' && peek() == '/') {
+            advance(); // consume '*'
+            advance(); // consume '/'
+            return;
+        }
+
+        advance();
+    }
 }

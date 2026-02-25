@@ -16,9 +16,13 @@ private:
     int line;
     int column;
 
+    static const std::unordered_map<std::string, TokenType> keywords;
+
     void advance();
     void skipWhitespace();
     Token number();
     Token identifier();
     int peek();
+    void skipLineComment();
+    void skipBlockComment();
 };
