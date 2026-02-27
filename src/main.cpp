@@ -10,15 +10,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    Token t;
-    t.type = TokenType::IDENTIFIER;
-    t.lexeme = "test";
-    t.line = 1;
-    t.column = 1;
-
-    std::cout << "Token creado: " << t.lexeme << std::endl;
-
-
     std::ifstream file(argv[1]);
     if (!file.is_open()) {
         std::cout << "Error: no se pudo abrir el archivo '" << argv[1] << "'" << std::endl;

@@ -25,4 +25,5 @@ private:
     int peek();
     void skipLineComment();
     void skipBlockComment();
+    void addCurrentCharToLexeme(Token& token);
 };

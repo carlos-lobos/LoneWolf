@@ -1,0 +1,70 @@
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/carlos/Proyectos/LoneWolf/build
+[100%] Built target lonewolf
+
+Ejecutando ./lonewolf ...
+
+IDENTIFIER : a
+ASSIGN : =
+NUMBER : 1
+SEMICOLON : ;
+IDENTIFIER : a
+ASSIGN : =
+IDENTIFIER : a
+PLUS : +
+NUMBER : 1
+SEMICOLON : ;
+IF : if
+LPAREN : (
+IDENTIFIER : a
+EQUAL : ==
+NUMBER : 2
+RPAREN : )
+LBRACE : {
+IDENTIFIER : b
+ASSIGN : =
+IDENTIFIER : a
+MINUS : -
+NUMBER : 2
+SEMICOLON : ;
+RBRACE : }
+ELSE : else
+LBRACE : {
+IDENTIFIER : c
+ASSIGN : =
+IDENTIFIER : a
+SEMICOLON : ;
+RBRACE : }
+IF : if
+LPAREN : (
+BANG : !
+IDENTIFIER : x
+RPAREN : )
+LBRACE : {
+IDENTIFIER : y
+ASSIGN : =
+NUMBER : 10
+SEMICOLON : ;
+RBRACE : }
+IDENTIFIER : x
+LESS : <
+NUMBER : 5
+SEMICOLON : ;
+IDENTIFIER : x
+LESS_EQUAL : <=
+NUMBER : 10
+SEMICOLON : ;
+IDENTIFIER : y
+GREATER : >
+NUMBER : 5
+SEMICOLON : ;
+IDENTIFIER : y
+GREATER_EQUAL : >=
+NUMBER : 10
+SEMICOLON : ;
+IDENTIFIER : x
+NOT_EQUAL : !=
+IDENTIFIER : y
+SEMICOLON : ;
+EOF : 

@@ -36,6 +36,7 @@ enum class TokenType {
 
     // Operadores compuestos
     EQUAL,        // ==
+    BANG,         // !
     NOT_EQUAL,    // !=
     LESS,         // <
     LESS_EQUAL,   // <=
@@ -70,6 +71,7 @@ inline std::string tokenTypeToString(TokenType type) {
         case TokenType::RBRACE:         return "RBRACE";
         // Operadores compuestos
         case TokenType::EQUAL:          return "EQUAL";
+        case TokenType::BANG:           return "BANG";
         case TokenType::NOT_EQUAL:      return "NOT_EQUAL";
         case TokenType::LESS:           return "LESS";
         case TokenType::LESS_EQUAL:     return "LESS_EQUAL";

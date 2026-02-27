@@ -1,6 +1,22 @@
-// comentario simple
-x = 10; /* comentario
+// comantario simple
+
+/* comentario
 multilinea */
-y = x + 1; // otro comentario
-/* comentario 
-multilinea */
+
+a = 1;
+a = a + 1;
+if ( a == 2 ) {
+    b = a - 2;
+} else {
+    c = a;
+}
+if ( ! x ) {
+    y = 10;
+}
+x < 5;
+x <= 10;
+y > 5;
+y >= 10;
+x != y;
+
+

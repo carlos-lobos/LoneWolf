@@ -85,6 +85,11 @@ Token Lexer::number() {
     return t;
 }
 
+void Lexer::addCurrentCharToLexeme(Token& token) {
+    token.lexeme += static_cast<char>(currentChar);
+    advance();
+}
+
 Token Lexer::getNextToken() {
 
     while (currentChar != EOF) {
@@ -102,41 +107,48 @@ Token Lexer::getNextToken() {
             return number();
         }
 
+        Token token;
+        TokenType type;
+
         //-- INI :: Manejo de operadores compuestos (antes de los operadores simples) --//
         // == o =
         if (currentChar == '=') {
             int startLine = line;
             int startColumn = column;
 
-            std::string lexeme;
-
             if (peek() == '=') {
-                lexeme += static_cast<char>(currentChar); // es '='
-                advance(); // consume '='
-                lexeme += static_cast<char>(currentChar); // es '=='
-                advance(); // consume segundo '='
-                return Token(TokenType::EQUAL, lexeme, startLine, startColumn);
+                addCurrentCharToLexeme(token); // consume '=' + advance()
+                type = TokenType::EQUAL;  // ==
             } else {
-                lexeme += static_cast<char>(currentChar); // es '='
-                advance();
-                return Token(TokenType::ASSIGN, lexeme, startLine, startColumn);
+                type = TokenType::ASSIGN; // =
             }
+
+            addCurrentCharToLexeme(token); // consume '=' + advance()
+            token.type = type;
+            token.line = startLine;
+            token.column = startColumn;
+
+            return token;
         }
 
-        // !=
+        // != o !
         if (currentChar == '!') {
             int startLine = line;
             int startColumn = column;
 
-            std::string lexeme;
-
             if (peek() == '=') {
-                lexeme += static_cast<char>(currentChar); // es '!'
-                advance();
-                lexeme += static_cast<char>(currentChar); // es '!='
-                advance();
-                return Token(TokenType::NOT_EQUAL, lexeme, startLine, startColumn);
+                addCurrentCharToLexeme(token); // consume '!' + advance()
+                type = TokenType::NOT_EQUAL;   // !=
+            } else {
+                type = TokenType::BANG;        // !
             }
+
+            addCurrentCharToLexeme(token); // consume '!' o '=' + advance()
+            token.type = type;
+            token.line = startLine;
+            token.column = startColumn;
+
+            return token;
         }
 
         // <= o <
@@ -144,19 +156,19 @@ Token Lexer::getNextToken() {
             int startLine = line;
             int startColumn = column;
 
-            std::string lexeme;
-
             if (peek() == '=') {
-                lexeme += static_cast<char>(currentChar); // es '<'
-                advance();
-                lexeme += static_cast<char>(currentChar); // es '<='
-                advance();
-                return Token(TokenType::LESS_EQUAL, lexeme, startLine, startColumn);
+                addCurrentCharToLexeme(token); // consume '<' + advance()
+                type = TokenType::LESS_EQUAL;  // <=
             } else {
-                lexeme += static_cast<char>(currentChar); // es '<'
-                advance();
-                return Token(TokenType::LESS, lexeme, startLine, startColumn);
+                type = TokenType::LESS;        // <
             }
+
+            addCurrentCharToLexeme(token); // consume '<' o '=' + advance()
+            token.type = type;
+            token.line = startLine;
+            token.column = startColumn;
+
+            return token;
         }
 
         // >= o >
@@ -164,22 +176,22 @@ Token Lexer::getNextToken() {
             int startLine = line;
             int startColumn = column;
 
-            std::string lexeme;
-
             if (peek() == '=') {
-                lexeme += static_cast<char>(currentChar); // es '>'
-                advance();
-                lexeme += static_cast<char>(currentChar); // es '>='
-                advance();
-                return Token(TokenType::GREATER_EQUAL, lexeme, startLine, startColumn);
+                addCurrentCharToLexeme(token); // consume '>' + advance()
+                type = TokenType::GREATER_EQUAL;  // >=
             } else {
-                lexeme += static_cast<char>(currentChar); // es '>'
-                advance();
-                return Token(TokenType::GREATER, lexeme, startLine, startColumn);
+                type = TokenType::GREATER;        // >
             }
+
+            addCurrentCharToLexeme(token); // consume '>' o '=' + advance()
+            token.type = type;
+            token.line = startLine;
+            token.column = startColumn;
+
+            return token;
         }
 
-        // "//" o "/"
+        // "//" o "/*" o "/"
         if (currentChar == '/') {
 
             if (peek() == '/') {
@@ -195,10 +207,14 @@ Token Lexer::getNextToken() {
             int startLine = line;
             int startColumn = column;
 
-            char c = static_cast<char>(currentChar);
-            advance();
+            addCurrentCharToLexeme(token); // consume '/' + advance()
+            type = TokenType::SLASH;       // /
 
-            return Token(TokenType::SLASH, std::string(1, c), startLine, startColumn);
+            token.type = type;
+            token.line = startLine;
+            token.column = startColumn;
+
+            return token;
         }
         //-- FIN :: Manejo de operadores compuestos (antes de los operadores simples) --//
 
@@ -208,10 +224,6 @@ Token Lexer::getNextToken() {
         char c = static_cast<char>(currentChar);
 
         switch (currentChar) {
-            /*case '=':
-                advance();
-                return Token{TokenType::ASSIGN, std::string(1, c), startLine, startColumn};*/
-                
             case '+':
                 advance();
                 return Token{TokenType::PLUS, std::string(1, c), startLine, startColumn};
@@ -223,10 +235,6 @@ Token Lexer::getNextToken() {
             case '*':
                 advance();
                 return Token{TokenType::STAR, std::string(1, c), startLine, startColumn};
-
-            /*case '/':
-                advance();
-                return Token{TokenType::SLASH, std::string(1, c), startLine, startColumn};*/
 
             case ';':
                 advance();
