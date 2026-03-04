@@ -8,10 +8,14 @@ const std::unordered_map<std::string, TokenType> Lexer::keywords = {
     {"return", TokenType::RETURN}
 };
 
-Lexer::Lexer(std::istream& input)
-    : input(input), currentChar(0), line(1), column(0)
+Lexer::Lexer(std::istream& input, ErrorCollector& errorCollector)
+    : input(input),
+      errorCollector(errorCollector),
+      currentChar(0),
+      line(1),
+      column(0)
 {
-    advance();  // leer primer carácter
+    advance();
 }
 
 void Lexer::advance() {
@@ -97,6 +101,10 @@ Token Lexer::getNextToken() {
         if (std::isspace(currentChar)) {
             skipWhitespace();
             continue;
+        }
+
+        if (currentChar == '"') {
+            return stringLiteral();
         }
 
         if (std::isalpha(currentChar) || currentChar == '_') {
@@ -258,8 +266,19 @@ Token Lexer::getNextToken() {
 
         }
 
-        //-- Salteo cualquier otra cosa --//
+        //-- Error ante un caracter no reconocido --//
         advance();
+
+        std::string message = std::string("Unexpected character: ") + c;
+
+        errorCollector.addError(message,
+                        startLine,
+                        startColumn);
+
+        return Token(TokenType::ERROR,
+             message,
+             startLine,
+             startColumn);
     }
 
     Token t;
@@ -300,4 +319,60 @@ void Lexer::skipBlockComment() {
 
         advance();
     }
+}
+
+Token Lexer::stringLiteral() {
+    int startLine = line;
+    int startColumn = column;
+
+    std::string lexeme;
+    advance(); // consumir la comilla inicial "
+
+    while (currentChar != '"' && currentChar != EOF) {
+
+        if (currentChar == '\n') {
+            errorCollector.addError("Unterminated string literal",
+                        startLine,
+                        startColumn);
+            
+            return Token(TokenType::ERROR,
+                    "Unterminated string literal",
+                    startLine,
+                    startColumn);
+        }
+
+        if (currentChar == '\\') {  // escape sequence
+            advance();
+
+            switch (currentChar) {
+                case 'n': lexeme += '\n'; break;
+                case 't': lexeme += '\t'; break;
+                case '"': lexeme += '"';  break;
+                case '\\': lexeme += '\\'; break;
+                default:
+                    lexeme += static_cast<char>(currentChar);
+                    break;
+            }
+        } else {
+            lexeme += static_cast<char>(currentChar);
+        }
+
+        advance();
+    }
+
+    if (currentChar == '"') {
+        advance(); // consumir comilla final
+        return Token(TokenType::STRING, lexeme, startLine, startColumn);
+    }
+
+    errorCollector.addError("Unterminated string literal",
+                        startLine,
+                        startColumn);
+    
+    return Token(TokenType::ERROR,
+             "Unterminated string literal",
+             startLine,
+             startColumn);
+
+    return Token(TokenType::END_OF_FILE, "", startLine, startColumn);
 }

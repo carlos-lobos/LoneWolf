@@ -3,15 +3,18 @@
 #include <istream>
 #include <string>
 #include "Token.h"
+#include "ErrorCollector.h"
 
 class Lexer {
 public:
-    explicit Lexer(std::istream& input);
+    explicit Lexer(std::istream& input, ErrorCollector& errorCollector);
 
     Token getNextToken();
 
 private:
     std::istream& input;
+    ErrorCollector& errorCollector;
+    
     int currentChar;
     int line;
     int column;
@@ -26,4 +29,5 @@ private:
     void skipLineComment();
     void skipBlockComment();
     void addCurrentCharToLexeme(Token& token);
+    Token stringLiteral();
 };

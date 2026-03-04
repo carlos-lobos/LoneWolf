@@ -14,6 +14,8 @@ enum class TokenType {
 
     // Types
     // INT_TYPE,
+    STRING,
+    ERROR,
 
     // Identifiers & literals
     IDENTIFIER,
@@ -54,6 +56,9 @@ inline std::string tokenTypeToString(TokenType type) {
         case TokenType::ELSE:           return "ELSE";
         case TokenType::WHILE:          return "WHILE";
         case TokenType::RETURN:         return "RETURN";
+        // Types
+        case TokenType::STRING:         return "STRING";
+        case TokenType::ERROR:          return "ERROR";
         // Identifiers & literals
         case TokenType::IDENTIFIER:     return "IDENTIFIER";
         case TokenType::NUMBER:         return "NUMBER";
