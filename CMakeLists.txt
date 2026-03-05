@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(lonewolf
     src/main.cpp
     src/lexer/Lexer.cpp
+    src/parser/Parser.cpp
 )
 
 target_include_directories(lonewolf PRIVATE include)
