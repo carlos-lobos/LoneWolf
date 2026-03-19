@@ -1,13 +1,17 @@
 #pragma once
 
+#include <vector>
 #include "Lexer.h"
 #include "ErrorCollector.h"
+#include "Ast/AstNode.h"
+#include "Ast/Expression.h"
+#include "Ast/Statement.h"
 
 class Parser {
 public:
     Parser(Lexer& lexer, ErrorCollector& errorCollector);
 
-    void parse();
+    std::vector<Statement*> parse();
 
 private:
     Lexer& lexer;
@@ -18,8 +22,13 @@ private:
 
     void advance();
 
-    void statement();
-    void expression();
-    void term();
-    void factor();
+    Statement* statement();
+    Expression* expression();
+    Expression* term();
+    Expression* factor();
+    Expression* unary();
+    Expression* primary();
+
+    bool check(TokenType type);
+    bool match(TokenType type);
 };

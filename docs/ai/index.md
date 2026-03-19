@@ -1,25 +1,12 @@
-# LoneWolf Language AI Reference
+# LoneWolf AI Context Loader
 
-Source of truth for AI agents working on the compiler.
-
-## Language
-- language_spec_v0.1.md
-
-## Syntax
-- grammar_v0.1.md
-
-## Compiler
-- compiler_architecture.md
-
-## AI behavior
-- ai_rules.md
-
-
-# LoneWolf AI Context
-
-Before answering any question you must read:
+You MUST read these files before answering:
 
 - ai_system_prompt.md
 - project_context.md
 - compiler_architecture.md
 - grammar_v0.1.md
+- language_spec_v0.1.md
+- current_task.md
+
+Do not answer until you understand the architecture.

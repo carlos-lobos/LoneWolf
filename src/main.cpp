@@ -1,13 +1,101 @@
 #include <iostream>
 #include <fstream>
-
-// Para lectura del archivo en memoria
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "Token.h"
 #include "Lexer.h"
 #include "Parser.h"
+#include "Ast/AstNode.h"
+
+class AstPrinter : public ASTNodeVisitor {
+public:
+    void print(ASTNode* node) {
+        if (node) {
+            node->accept(*this);
+        }
+    }
+
+    void visitBinaryExpression(BinaryExpression& node) override {
+        std::cout << "(binary ";
+        std::cout << node.getOp() << " ";
+        print(node.getLeft());
+        std::cout << " ";
+        print(node.getRight());
+        std::cout << ")";
+    }
+
+    void visitUnaryExpression(UnaryExpression& node) override {
+        std::cout << "(unary " << node.getOp() << " ";
+        print(node.getOperand());
+        std::cout << ")";
+    }
+
+    void visitLiteralExpression(LiteralExpression& node) override {
+        std::cout << node.getValue();
+    }
+
+    void visitIdentifierExpression(IdentifierExpression& node) override {
+        std::cout << node.getId();
+    }
+
+    void visitGroupedExpression(GroupedExpression& node) override {
+        std::cout << "(group ";
+        print(node.getInner());
+        std::cout << ")";
+    }
+
+    void visitAssignmentStatement(AssignmentStatement& node) override {
+        std::cout << "(assign ";
+        print(node.getLhs());
+        std::cout << " ";
+        print(node.getRhs());
+        std::cout << ")";
+    }
+
+    void visitExpressionStatement(ExpressionStatement& node) override {
+        print(node.getExpr());
+    }
+
+    void visitIfStatement(IfStatement& node) override {
+        std::cout << "(if ";
+        print(node.getCondition());
+        std::cout << " ";
+        print(node.getThenBranch());
+        if (node.getElseBranch()) {
+            std::cout << " ";
+            print(node.getElseBranch());
+        }
+        std::cout << ")";
+    }
+
+    void visitWhileStatement(WhileStatement& node) override {
+        std::cout << "(while ";
+        print(node.getCondition());
+        std::cout << " ";
+        print(node.getBody());
+        std::cout << ")";
+    }
+
+    void visitReturnStatement(ReturnStatement& node) override {
+        std::cout << "(return";
+        if (node.getValue()) {
+            std::cout << " ";
+            print(node.getValue());
+        }
+        std::cout << ")";
+    }
+
+    void visitBlockStatement(BlockStatement& node) override {
+        std::cout << "(block";
+        for (const auto& stmt : node.getStatements()) {
+            std::cout << " ";
+            print(stmt);
+        }
+        std::cout << ")";
+    }
+};
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -15,16 +103,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-
-    // Abrir el archivo fuente para lectura
     std::ifstream file(argv[1]);
     if (!file.is_open()) {
         std::cerr << "[ERROR] No se pudo abrir el archivo '" << argv[1] << "'" << std::endl;
         return 1;
     }
 
-
-    // INI :: lectura del archivo en memoria
     std::vector<std::string> sourceLines;
     std::string lineText;
 
@@ -32,20 +116,11 @@ int main(int argc, char* argv[]) {
         sourceLines.push_back(lineText);
     }
 
-    file.clear();  // limpiar flags EOF
-    file.seekg(0); // volver al inicio
-    // FIN :: lectura del archivo en memoria
+    file.clear();
+    file.seekg(0);
 
-
-
-    // Inicializar el ErrorCollector para recopilar errores durante el análisis léxico y sintáctico
     ErrorCollector errors;
 
-
-
-    // =========================
-    // FASE 1 — LEXER (debug)
-    // =========================
     Lexer lexer(file, errors);
 
     Token token;
@@ -59,25 +134,26 @@ int main(int argc, char* argv[]) {
 
     } while (token.type != TokenType::END_OF_FILE);
 
-    file.clear();       // limpiar flags EOF
-    file.seekg(0);      // volver al inicio
-
-
-
-    // =========================
-    // FASE 2 — PARSER
-    // =========================
+    file.clear();
+    file.seekg(0);
 
     Lexer parserLexer(file, errors);
     Parser parser(parserLexer, errors);
 
-    parser.parse();
+    std::vector<Statement*> statements = parser.parse();
 
+    if (!errors.hasErrors()) {
+        std::cout << "\n=== AST ===" << std::endl;
+        AstPrinter printer;
+        for (auto* stmt : statements) {
+            printer.print(stmt);
+            std::cout << std::endl;
+        }
+    }
 
-
-    // =========================
-    // MOSTRAR ERRORES
-    // =========================
+    for (auto* stmt : statements) {
+        delete stmt;
+    }
 
     if (errors.hasErrors()) {
         std::cout << "\nErrores encontrados:\n\n";
@@ -107,7 +183,5 @@ int main(int argc, char* argv[]) {
         }
     }
 
-
-    // Retornar 0 para indicar que el programa terminó correctamente
     return 0;
 }

@@ -1,135 +1,204 @@
 #include "Parser.h"
 
-// Constructor del Parser, inicializa el lexer y el errorCollector, y obtiene el primer token
 Parser::Parser(Lexer& lexer, ErrorCollector& errorCollector)
     : lexer(lexer), errorCollector(errorCollector)
 {
     advance();
 }
 
-// advance() obtiene el siguiente token del lexer y lo asigna a currentToken
 void Parser::advance() {
     previousToken = currentToken;
     currentToken = lexer.getNextToken();
 }
 
-// parse() lee los tokens hasta que se llegue al final del archivo, y llama a statement() para procesar cada declaración o instrucción
-void Parser::parse() {
+std::vector<Statement*> Parser::parse() {
+    std::vector<Statement*> statements;
     while (currentToken.type != TokenType::END_OF_FILE) {
-        statement();
+        statements.push_back(statement());
     }
+    return statements;
 }
 
-// statement() maneja la sintaxis de una declaración o instrucción, en este caso una asignación o una expresión seguida de un punto y coma
-void Parser::statement() {
+bool Parser::check(TokenType type) {
+    if (currentToken.type == type) return true;
+    return false;
+}
 
-    // int startLine = currentToken.line;
-    // int startColumn = currentToken.column;
+bool Parser::match(TokenType type) {
+    if (!check(type)) return false;
+    advance();
+    return true;
+}
+
+Statement* Parser::statement() {
+    if (match(TokenType::IF)) {
+        int line = previousToken.line;
+        int column = previousToken.column;
+
+        if (!match(TokenType::LPAREN)) {
+            errorCollector.addError("Expected '(' after 'if'", line, column);
+        }
+
+        Expression* condition = expression();
+
+        if (!match(TokenType::RPAREN)) {
+            errorCollector.addError("Expected ')' after condition", currentToken.line, currentToken.column);
+        }
+
+        Statement* thenBranch = statement();
+        Statement* elseBranch = nullptr;
+
+        if (match(TokenType::ELSE)) {
+            elseBranch = statement();
+        }
+
+        return new IfStatement(condition, thenBranch, elseBranch, line, column);
+    }
+
+    if (match(TokenType::WHILE)) {
+        int line = previousToken.line;
+        int column = previousToken.column;
+
+        if (!match(TokenType::LPAREN)) {
+            errorCollector.addError("Expected '(' after 'while'", line, column);
+        }
+
+        Expression* condition = expression();
+
+        if (!match(TokenType::RPAREN)) {
+            errorCollector.addError("Expected ')' after condition", currentToken.line, currentToken.column);
+        }
+
+        Statement* body = statement();
+
+        return new WhileStatement(condition, body, line, column);
+    }
+
+    if (match(TokenType::RETURN)) {
+        int line = previousToken.line;
+        int column = previousToken.column;
+
+        Expression* value = nullptr;
+        if (!check(TokenType::SEMICOLON)) {
+            value = expression();
+        }
+
+        if (!match(TokenType::SEMICOLON)) {
+            errorCollector.addError("Expected ';' after return value", previousToken.line, previousToken.column + previousToken.lexeme.length());
+        }
+
+        return new ReturnStatement(value, line, column);
+    }
+
+    if (match(TokenType::LBRACE)) {
+        int line = previousToken.line;
+        int column = previousToken.column;
+
+        std::vector<Statement*> statements;
+        while (!check(TokenType::RBRACE) && !check(TokenType::END_OF_FILE)) {
+            statements.push_back(statement());
+        }
+
+        if (!match(TokenType::RBRACE)) {
+            errorCollector.addError("Expected '}' after block", currentToken.line, currentToken.column);
+        }
+
+        return new BlockStatement(statements, line, column);
+    }
 
     if (currentToken.type == TokenType::IDENTIFIER) {
+        int line = currentToken.line;
+        int column = currentToken.column;
 
         advance();
 
-        if (currentToken.type == TokenType::ASSIGN) {
+        if (match(TokenType::ASSIGN)) {
+            Expression* rhs = expression();
 
-            advance();
-            expression();
-
-            if (currentToken.type == TokenType::SEMICOLON) {
-                advance();
-            } else {
-                errorCollector.addError(
-                    "Expected ';'",
-                    previousToken.line,
-                    previousToken.column + previousToken.lexeme.length()
-                );
+            if (!match(TokenType::SEMICOLON)) {
+                errorCollector.addError("Expected ';'", previousToken.line, previousToken.column + previousToken.lexeme.length());
             }
 
+            IdentifierExpression* lhs = new IdentifierExpression(previousToken.lexeme, line, column);
+            return new AssignmentStatement(lhs, rhs, line, column);
         }
-
-    } else {
-
-        expression();
-
-        if (currentToken.type == TokenType::SEMICOLON) {
-            advance();
-        } else {
-            errorCollector.addError(
-                "Expected ';'",
-                previousToken.line,
-                previousToken.column + previousToken.lexeme.length()
-            );
-        }
-
     }
+
+    int line = currentToken.line;
+    int column = currentToken.column;
+    Expression* expr = expression();
+
+    if (!match(TokenType::SEMICOLON)) {
+        errorCollector.addError("Expected ';'", previousToken.line, previousToken.column + previousToken.lexeme.length());
+    }
+
+    return new ExpressionStatement(expr, line, column);
 }
 
-// expression() maneja la sintaxis de una expresión, en este caso una suma o resta de términos
-void Parser::expression() {
+Expression* Parser::expression() {
+    Expression* expr = term();
 
-    term();
-
-    while (
-        currentToken.type == TokenType::PLUS ||
-        currentToken.type == TokenType::MINUS
-    ) {
-
-        advance();
-        term();
+    while (match(TokenType::PLUS) || match(TokenType::MINUS)) {
+        std::string op = previousToken.lexeme;
+        Expression* right = term();
+        Expression* left = expr;
+        expr = new BinaryExpression(left, op, right, left->getLine(), left->getColumn());
     }
+
+    return expr;
 }
 
-// term() maneja la sintaxis de un término, en este caso una multiplicación o división de factores
-void Parser::term() {
+Expression* Parser::term() {
+    Expression* expr = unary();
 
-    factor();
-
-    while (
-        currentToken.type == TokenType::STAR ||
-        currentToken.type == TokenType::SLASH
-    ) {
-
-        advance();
-        factor();
+    while (match(TokenType::STAR) || match(TokenType::SLASH)) {
+        std::string op = previousToken.lexeme;
+        Expression* right = unary();
+        Expression* left = expr;
+        expr = new BinaryExpression(left, op, right, left->getLine(), left->getColumn());
     }
+
+    return expr;
 }
 
-// factor() maneja la sintaxis de un factor, en este caso un número, una cadena, un identificador o una expresión entre paréntesis
-void Parser::factor() {
-
-    if (
-        currentToken.type == TokenType::NUMBER ||
-        currentToken.type == TokenType::STRING ||
-        currentToken.type == TokenType::IDENTIFIER
-    ) {
-        advance();
-        return;
+Expression* Parser::unary() {
+    if (match(TokenType::PLUS) || match(TokenType::MINUS)) {
+        std::string op = previousToken.lexeme;
+        int line = previousToken.line;
+        int column = previousToken.column;
+        Expression* operand = unary();
+        return new UnaryExpression(op, operand, line, column);
     }
 
-    if (currentToken.type == TokenType::LPAREN) {
+    return primary();
+}
 
-        advance();
-        expression();
+Expression* Parser::primary() {
+    if (match(TokenType::NUMBER)) {
+        return new LiteralExpression(previousToken.lexeme, previousToken.line, previousToken.column);
+    }
 
-        if (currentToken.type == TokenType::RPAREN) {
-            advance();
-        } else {
-            errorCollector.addError(
-                "Expected ')'",
-                currentToken.line,
-                currentToken.column
-            );
+    if (match(TokenType::STRING)) {
+        return new LiteralExpression(previousToken.lexeme, previousToken.line, previousToken.column);
+    }
+
+    if (match(TokenType::IDENTIFIER)) {
+        return new IdentifierExpression(previousToken.lexeme, previousToken.line, previousToken.column);
+    }
+
+    if (match(TokenType::LPAREN)) {
+        int line = previousToken.line;
+        int column = previousToken.column;
+        Expression* inner = expression();
+
+        if (!match(TokenType::RPAREN)) {
+            errorCollector.addError("Expected ')'", currentToken.line, currentToken.column);
         }
 
-        return;
+        return new GroupedExpression(inner, line, column);
     }
 
-    errorCollector.addError(
-        "Unexpected token in expression",
-        currentToken.line,
-        currentToken.column
-    );
-
+    errorCollector.addError("Unexpected token in expression", currentToken.line, currentToken.column);
     advance();
+    return new LiteralExpression("error", currentToken.line, currentToken.column);
 }
-
