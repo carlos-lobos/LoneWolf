@@ -109,6 +109,7 @@ Statement* Parser::statement() {
     if (currentToken.type == TokenType::IDENTIFIER) {
         int line = currentToken.line;
         int column = currentToken.column;
+        std::string identifierName = currentToken.lexeme;
 
         advance();
 
@@ -119,7 +120,7 @@ Statement* Parser::statement() {
                 errorCollector.addError("Expected ';'", previousToken.line, previousToken.column + previousToken.lexeme.length());
             }
 
-            IdentifierExpression* lhs = new IdentifierExpression(previousToken.lexeme, line, column);
+            IdentifierExpression* lhs = new IdentifierExpression(identifierName, line, column);
             return new AssignmentStatement(lhs, rhs, line, column);
         }
     }
@@ -136,9 +137,29 @@ Statement* Parser::statement() {
 }
 
 Expression* Parser::expression() {
-    Expression* expr = term();
+    Expression* expr = comparison();
 
     while (match(TokenType::PLUS) || match(TokenType::MINUS)) {
+        std::string op = previousToken.lexeme;
+        Expression* right = comparison();
+        Expression* left = expr;
+        expr = new BinaryExpression(left, op, right, left->getLine(), left->getColumn());
+    }
+
+    return expr;
+}
+
+Expression* Parser::comparison() {
+    Expression* expr = term();
+
+    while (
+        match(TokenType::GREATER) ||
+        match(TokenType::GREATER_EQUAL) ||
+        match(TokenType::LESS) ||
+        match(TokenType::LESS_EQUAL) ||
+        match(TokenType::EQUAL) ||
+        match(TokenType::NOT_EQUAL)
+    ) {
         std::string op = previousToken.lexeme;
         Expression* right = term();
         Expression* left = expr;

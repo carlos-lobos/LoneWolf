@@ -8,6 +8,7 @@
 #include "Lexer.h"
 #include "Parser.h"
 #include "Ast/AstNode.h"
+#include "semantic/SemanticAnalyzer.h"
 
 class AstPrinter : public ASTNodeVisitor {
 public:
@@ -141,6 +142,11 @@ int main(int argc, char* argv[]) {
     Parser parser(parserLexer, errors);
 
     std::vector<Statement*> statements = parser.parse();
+
+    if (!errors.hasErrors()) {
+        SemanticAnalyzer semanticAnalyzer(errors);
+        semanticAnalyzer.analyze(statements);
+    }
 
     if (!errors.hasErrors()) {
         std::cout << "\n=== AST ===" << std::endl;

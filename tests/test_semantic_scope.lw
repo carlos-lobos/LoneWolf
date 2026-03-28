@@ -1,0 +1,6 @@
+// Test: Multiple scopes
+x = 1;
+if (x > 0) {
+    y = 2;
+}
+z = y;

@@ -1,0 +1,2 @@
+// Test: Variable no definida
+x = y + 1;

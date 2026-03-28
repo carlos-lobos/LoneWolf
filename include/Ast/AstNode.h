@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "semantic/Type.h"
 
 class ASTNodeVisitor;
 
@@ -15,11 +16,15 @@ public:
     int getLine() const { return line; }
     int getColumn() const { return column; }
 
+    Type* getType() const { return type.get(); }
+    void setType(Type* t) { type.reset(t); }
+
 protected:
-    ASTNode(int line = 0, int column = 0) : line(line), column(column) {}
+    ASTNode(int line = 0, int column = 0) : line(line), column(column), type(nullptr) {}
 
     int line;
     int column;
+    std::unique_ptr<Type> type;
 };
 
 class Statement : public ASTNode {

@@ -1,0 +1,48 @@
+// Test completo de todas las funcionalidades AST
+
+// Asignaciones basicas
+x = 10;
+y = 5;
+
+// Aritmetica
+sum = x + y;
+diff = x - y;
+prod = x * y;
+quot = x / y;
+
+// Operadores unarios
+neg = -5;
+pos = +3;
+
+// Precedencia de operadores
+result = 2 + 3 * 4;
+
+// Comparaciones
+mayor = x > y;
+menor = x < y;
+igual = x == y;
+diferente = x != y;
+
+// Expresiones agrupadas
+grouped = (x + y) * 2;
+
+// Strings
+mensaje = "Hola Mundo";
+
+// If simple
+if (x > 0) {
+    z = 1;
+}
+
+// If-else
+if (x > 10) {
+    z = 1;
+} else {
+    z = 2;
+}
+
+// While
+i = 0;
+while (i < 5) {
+    i = i + 1;
+}
